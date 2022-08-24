@@ -28,8 +28,8 @@ if ($opt{debug}) {
 print "[info] spawning test LDAP server on port " . $opt{port} . "\n";
 my $server = Net::LDAP::Server::Test->new( $opt{port}, auto_schema => 1 );
 
-my $ldap = Net::LDAP->new( 'localhost:' . $opt{port} );
-my $ret  = $ldap->bind();
+my $client = Net::LDAP->new( 'localhost:' . $opt{port} );
+my $ret    = $client->bind();
 if ( $ret->code ) {
     die "[error] ldap client: " . $ret->error . "\n";
 }
@@ -56,14 +56,14 @@ my $entry      = {
 
 print "[info] creating test ldap user: $username - $email\n";
 
-$ret = $ldap->add( $dn, attr => [%$entry] );
+$ret = $client->add( $dn, attr => [%$entry] );
 if ( $ret->code ) {
     die "[error] ldap client: " . $ret->error . "\n";
 }
 
 print "[info] creating test ldap group: $group_name\n";
 
-$ret = $ldap->add(
+$ret = $client->add(
     $group_dn,
     attr => [
         cn          => $group_name,
@@ -82,8 +82,8 @@ print "ctrl+c to exit\n";
 
 while (1) {
     if ($exit) {
-        print "\n[info] unbinding LDAP server\n";
-        $ldap->unbind();
+        print "\n[info] unbinding LDAP client and shutting down server\n";
+        $client->unbind();
         print "[info] exiting\n";
         exit;
     };
