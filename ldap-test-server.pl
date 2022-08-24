@@ -29,7 +29,10 @@ print "[info] spawning test LDAP server on port " . $opt{port} . "\n";
 my $server = Net::LDAP::Server::Test->new( $opt{port}, auto_schema => 1 );
 
 my $ldap = Net::LDAP->new( 'localhost:' . $opt{port} );
-$ldap->bind();
+my $ret  = $ldap->bind();
+if ( $ret->code ) {
+    die "[error] ldap client: " . $ret->error . "\n";
+}
 
 my $username   = 'testldapuser';
 my $email      = "$username\@example.com";
@@ -53,11 +56,14 @@ my $entry      = {
 
 print "[info] creating test ldap user: $username - $email\n";
 
-$ldap->add( $dn, attr => [%$entry] );
+$ret = $ldap->add( $dn, attr => [%$entry] );
+if ( $ret->code ) {
+    die "[error] ldap client: " . $ret->error . "\n";
+}
 
 print "[info] creating test ldap group: $group_name\n";
 
-$ldap->add(
+$ret = $ldap->add(
     $group_dn,
     attr => [
         cn          => $group_name,
@@ -65,6 +71,9 @@ $ldap->add(
         objectClass => 'Group',
     ],
 );
+if ( $ret->code ) {
+    die "[error] ldap client: " . $ret->error . "\n";
+}
 
 my $exit = 0;
 $SIG{INT} = sub { $exit = 1 };
