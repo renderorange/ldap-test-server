@@ -45,18 +45,18 @@ my $group_name = 'test ldap group';
 my $group_dn   = "cn=$group_name,ou=groups,$base";
 my $dn         = "uid=$username,$users_dn";
 
-my $entry      = {
+my %entry      = (
     cn           => $name,
     mail         => $email,
     uid          => $username,
     objectClass  => 'User',
     userPassword => $password,
     nick         => $nick,
-};
+);
 
 print "[info] creating test ldap user: $username - $email\n";
 
-$ret = $client->add( $dn, attr => [%$entry] );
+$ret = $client->add( $dn, attr => [%entry] );
 if ( $ret->code ) {
     die "[error] ldap client: " . $ret->error . "\n";
 }
