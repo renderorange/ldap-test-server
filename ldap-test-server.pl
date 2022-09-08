@@ -7,6 +7,10 @@ use Getopt::Long ();
 use Pod::Usage   ();
 use Net::LDAP::Server::Test;
 use Net::LDAP;
+use Try::Tiny    ();
+use FindBin      ();
+use YAML::Tiny   ();
+use Data::Dumper ();
 
 my %opt = (
     port => 6570,
@@ -18,11 +22,24 @@ Getopt::Long::GetOptions(
     'help',
 ) || Pod::Usage::pod2usage(1);
 
-Pod::Usage::pod2usage(0) if ($opt{help});
+Pod::Usage::pod2usage(0) if ( $opt{help} );
 
-if ($opt{debug}) {
+if ( $opt{debug} ) {
     print "[info] setting ldap debug\n";
     $ENV{LDAP_DEBUG} = 1;
+}
+
+my $config = Try::Tiny::try {
+    my $yaml = YAML::Tiny->read("$FindBin::RealBin/config.yaml");
+    return $yaml->[0];
+}
+Try::Tiny::catch {
+    print "[error] $_";
+    exit 1;
+};
+
+if ( $opt{debug} ) {
+    print "[debug] config:\n" . Data::Dumper::Dumper($config);
 }
 
 print "[info] spawning test LDAP server on port " . $opt{port} . "\n";
@@ -34,45 +51,41 @@ if ( $ret->code ) {
     die "[error] ldap client: " . $ret->error . "\n";
 }
 
-my $username   = 'testldapuser';
-my $email      = "$username\@example.com";
-my $name       = 'Test LDAP User';
-my $nick       = 'aoldude1982';
-my $password   = 'password';
-my $base       = 'dc=example,dc=com';
-my $users_dn   = "ou=users,$base";
-my $group_name = 'test ldap group';
-my $group_dn   = "cn=$group_name,ou=groups,$base";
-my $dn         = "uid=$username,$users_dn";
+foreach my $user ( keys %{ $config->{users} } ) {
+    my %entry = ();
+    $entry{objectClass} = $config->{userobjectclass};
 
-my %entry      = (
-    cn           => $name,
-    mail         => $email,
-    uid          => $username,
-    objectClass  => 'User',
-    userPassword => $password,
-    nick         => $nick,
-);
+    foreach my $key ( keys %{ $config->{users}{$user} } ) {
+        $entry{$key} = $config->{users}{$user}{$key};
+    }
 
-print "[info] creating test ldap user: $username - $email\n";
-
-$ret = $client->add( $dn, attr => [%entry] );
-if ( $ret->code ) {
-    die "[error] ldap client: " . $ret->error . "\n";
+    my $user_dn = 'uid=' . $config->{users}{$user}{uid} . ',ou=' . $config->{userou} . ',' . $config->{basedn};
+    my $ret     = $client->add( $user_dn, attr => [%entry] );
+    if ( $ret->code ) {
+        die "[error] ldap client: " . $ret->error . "\n";
+    }
 }
 
-print "[info] creating test ldap group: $group_name\n";
+foreach my $group ( keys %{ $config->{groups} } ) {
+    my $group_dn = 'cn=' . $config->{groups}{$group}{cn} . ',ou=' . $config->{groupou} . ',' . $config->{basedn};
 
-$ret = $client->add(
-    $group_dn,
-    attr => [
-        cn          => $group_name,
-        memberDN    => [ $dn ],
-        objectClass => 'Group',
-    ],
-);
-if ( $ret->code ) {
-    die "[error] ldap client: " . $ret->error . "\n";
+    my $member_dn = [];
+    foreach my $user ( @{ $config->{groups}{$group}{members} } ) {
+        my $user_dn = 'uid=' . $config->{users}{$user}{uid} . ',ou=' . $config->{userou} . ',' . $config->{basedn};
+        push @{$member_dn}, $user_dn;
+    }
+
+    my $ret = $client->add(
+        $group_dn,
+        attr => [
+            cn                         => $config->{groups}{$group}{cn},
+            $config->{groupmemberattr} => $member_dn,
+            objectClass                => $config->{userobjectclass},
+        ],
+    );
+    if ( $ret->code ) {
+        die "[error] ldap client: " . $ret->error . "\n";
+    }
 }
 
 my $exit = 0;
@@ -86,7 +99,7 @@ while (1) {
         $client->unbind();
         print "[info] exiting\n";
         exit;
-    };
+    }
 }
 
 __END__
@@ -126,9 +139,60 @@ print this dialogue
 
 =back
 
+=head1 CONFIGURATION
+
+Users and groups can be configured using the C<config.yaml> file in the project directory.  An example config, C<config.yaml.example>, is provided.
+
+The following base keys are required and used to build other variables on spinup.
+
+=over
+
+=item * basedn
+
+=item * userou
+
+=item * userobjectclass
+
+=item * groupou
+
+=item * groupobjectclass
+
+=item * groupmemberattr
+
+=back
+
+Users are not required to be configured, but if added, each users entry is required to follow the following format; a users key (in the example case C<one> and C<two>), with attribute keys to be added for the user.  The C<uid> key is required, the rest may be any attributes you want to include.
+
+ users:
+   one:
+     uid: one
+     mail: one@example.com
+     cn: User One
+     userPassword: password
+   two:
+     uid: two
+     mail: two@example.com
+     cn: User Two
+     userPassword: password
+
+Groups are not required to be configured, but if present, require the following format; a groups key (in the example case C<one>), with C<cn> attributes key.
+
+ groups:
+   one:
+     cn: Group One
+     members:
+       - one
+       - two
+
+Groups are not required to contain members.  To add members to a group, they must be within the C<members> key, and must match a users key from the users section of the config (in the example case C<one> and C<two>).
+
 =head1 DEPENDENCIES
 
 =over
+
+=item L<strict>
+
+=item L<warnings>
 
 =item L<Getopt::Long>
 
@@ -137,6 +201,14 @@ print this dialogue
 =item L<Net::LDAP::Server::Test>
 
 =item L<Net::LDAP>
+
+=item L<Try::Tiny>
+
+=item L<FindBin>
+
+=item L<YAML::Tiny>
+
+=item L<Data::Dumper>
 
 =back
 
