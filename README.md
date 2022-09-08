@@ -27,9 +27,53 @@ LDAP users and groups are defined and added on spinup.  LDAP data does not persi
 
     print this dialogue
 
+# CONFIGURATION
+
+Users and groups can be configured using the `config.yaml` file in the project directory.  An example config, `config.yaml.example`, is provided.
+
+The following base keys are required and used to build other variables on spinup.
+
+- basedn
+- userou
+- userobjectclass
+- groupou
+- groupobjectclass
+- groupmemberattr
+
+Users are not required to be configured, but if added, each users entry is required to follow the following format; a users key (in the example case `one` and `two`), with attribute keys to be added for the user.  The `uid` key is required, the rest may be any attributes you want to include.
+
+    users:
+      one:
+        uid: one
+        mail: one@example.com
+        cn: User One
+        userPassword: password
+      two:
+        uid: two
+        mail: two@example.com
+        cn: User Two
+        userPassword: password
+
+Groups are not required to be configured, but if present, require the following format; a groups key (in the example case `one`), with `cn` attributes key.
+
+    groups:
+      one:
+        cn: Group One
+        members:
+          - one
+          - two
+
+Groups are not required to contain members.  To add members to a group, they must be within the `members` key, and must match a users key from the users section of the config (in the example case `one` and `two`).
+
 # DEPENDENCIES
 
-- [Getopt::Long](https://metacpan.org/pod/Getopt%3A%3ALong)
-- [Pod::Usage](https://metacpan.org/pod/Pod%3A%3AUsage)
-- [Net::LDAP::Server::Test](https://metacpan.org/pod/Net%3A%3ALDAP%3A%3AServer%3A%3ATest)
-- [Net::LDAP](https://metacpan.org/pod/Net%3A%3ALDAP)
+- [strict](https://metacpan.org/pod/strict)
+- [warnings](https://metacpan.org/pod/warnings)
+- [Getopt::Long](https://metacpan.org/pod/Getopt::Long)
+- [Pod::Usage](https://metacpan.org/pod/Pod::Usage)
+- [Net::LDAP::Server::Test](https://metacpan.org/pod/Net::LDAP::Server::Test)
+- [Net::LDAP](https://metacpan.org/pod/Net::LDAP)
+- [Try::Tiny](https://metacpan.org/pod/Try::Tiny)
+- [FindBin](https://metacpan.org/pod/FindBin)
+- [YAML::Tiny](https://metacpan.org/pod/YAML::Tiny)
+- [Data::Dumper](https://metacpan.org/pod/Data::Dumper)
