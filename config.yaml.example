@@ -1,0 +1,24 @@
+---
+basedn: dc=example,dc=com
+userou: users
+userobjectclass: User
+groupou: groups
+groupobjectclass: Group
+groupmemberattr: member
+users:
+  one:
+    uid: one
+    mail: one@example.com
+    cn: User One
+    userPassword: password
+  two:
+    uid: two
+    mail: two@example.com
+    cn: User Two
+    userPassword: password
+groups:
+  one:
+    cn: Group One
+    members:
+      - one
+      - two
