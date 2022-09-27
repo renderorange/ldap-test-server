@@ -18,6 +18,7 @@ my %opt = (
 Getopt::Long::GetOptions(
     \%opt,
     'port=i',
+    'config=s',
     'debug',
     'help',
 ) || Pod::Usage::pod2usage(1);
@@ -29,8 +30,11 @@ if ( $opt{debug} ) {
     $ENV{LDAP_DEBUG} = 1;
 }
 
+unless ( $opt{config} ) {
+    $opt{config} = 'config.yaml';
+}
 my $config = Try::Tiny::try {
-    my $yaml = YAML::Tiny->read("$FindBin::RealBin/config.yaml");
+    my $yaml = YAML::Tiny->read("$FindBin::RealBin/" . $opt{config});
     return $yaml->[0];
 }
 Try::Tiny::catch {
@@ -118,7 +122,7 @@ LDAP users and groups are defined and added on spinup.  LDAP data does not persi
 
 =head1 SYNOPSIS
 
- ldap-test-server.pl [--port <port number>] [--debug]
+ ldap-test-server.pl [--port <port number>] [--config <file>] [--debug]
                      [--help]
 
 =head1 OPTIONS
@@ -128,6 +132,10 @@ LDAP users and groups are defined and added on spinup.  LDAP data does not persi
 =item --port
 
 port to bind the LDAP server to; defaults to 6570
+
+=item --config <file>
+
+config file to load; defaults to C<config.yaml>
 
 =item --debug
 
