@@ -10,14 +10,18 @@ LDAP users and groups are defined and added on spinup.  LDAP data does not persi
 
 # SYNOPSIS
 
-    ldap-test-server.pl [--port <port number>] [--debug]
+    ldap-test-server.pl [--port <port number>] [--config <file>] [--debug]
                         [--help]
 
 # OPTIONS
 
-- --port
+- --port <port number>
 
     port to bind the LDAP server to; defaults to 6570
+
+- --config <file>
+
+    config file to load; defaults to `config.yaml`
 
 - --debug
 
