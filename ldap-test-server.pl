@@ -129,7 +129,7 @@ LDAP users and groups are defined and added on spinup.  LDAP data does not persi
 
 =over
 
-=item --port
+=item --port <port number>
 
 port to bind the LDAP server to; defaults to 6570
 
