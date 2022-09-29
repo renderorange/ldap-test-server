@@ -147,7 +147,9 @@ print this dialogue
 
 =head1 CONFIGURATION
 
-Users and groups can be configured using the C<config.yaml> file in the project directory.  An example config, C<config.yaml.example>, is provided.
+Users and groups can be configured by yaml file in the project directory.  An example config, C<config.yaml.example>, is provided.
+
+To get started, rename C<config.yaml.example> to C<config.yaml>.  Alternately named config files may be used and loaded with the C<--config> option.
 
 The following base keys are required and used to build other variables on spinup.
 
@@ -191,6 +193,24 @@ Groups are not required to be configured, but if present, require the following 
        - two
 
 Groups are not required to contain members.  To add members to a group, they must be within the C<members> key, and must match a users key from the users section of the config (in the example case C<one> and C<two>).
+
+=head1 EXAMPLES
+
+=over
+
+=item Run with default port and default config file name
+
+ perl ldap-test-server.pl
+
+=item Run with alternate port and alternate config file name
+
+ perl ldap-test-server.pl --port 6571 --config complex.yaml
+
+=item Run with additional debug output enabled
+
+ perl ldap-test-server.pl --debug
+
+=back
 
 =head1 DEPENDENCIES
 

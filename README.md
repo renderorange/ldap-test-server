@@ -33,7 +33,9 @@ LDAP users and groups are defined and added on spinup.  LDAP data does not persi
 
 # CONFIGURATION
 
-Users and groups can be configured using the `config.yaml` file in the project directory.  An example config, `config.yaml.example`, is provided.
+Users and groups can be configured by yaml file in the project directory.  An example config, `config.yaml.example`, is provided.
+
+To get started, rename `config.yaml.example` to `config.yaml`.  Alternately named config files may be used and loaded with the `--config` option.
 
 The following base keys are required and used to build other variables on spinup.
 
@@ -68,6 +70,20 @@ Groups are not required to be configured, but if present, require the following 
           - two
 
 Groups are not required to contain members.  To add members to a group, they must be within the `members` key, and must match a users key from the users section of the config (in the example case `one` and `two`).
+
+# EXAMPLES
+
+- Run with default port and default config file name
+
+        perl ldap-test-server.pl
+
+- Run with alternate port and alternate config file name
+
+        perl ldap-test-server.pl --port 6571 --config complex.yaml
+
+- Run with additional debug output enabled
+
+        perl ldap-test-server.pl --debug
 
 # DEPENDENCIES
 
