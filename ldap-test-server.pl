@@ -13,7 +13,8 @@ use YAML::Tiny   ();
 use Data::Dumper ();
 
 my %opt = (
-    port => 6570,
+    port   => 6570,
+    config => 'config.yaml',
 );
 Getopt::Long::GetOptions(
     \%opt,
@@ -30,9 +31,6 @@ if ( $opt{debug} ) {
     $ENV{LDAP_DEBUG} = 1;
 }
 
-unless ( $opt{config} ) {
-    $opt{config} = 'config.yaml';
-}
 my $config = Try::Tiny::try {
     my $yaml = YAML::Tiny->read("$FindBin::RealBin/" . $opt{config});
     return $yaml->[0];
